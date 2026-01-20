@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Calculadora de Saída</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 2rem;
+            max-width: 520px;
+            margin: auto;
+        }
+
+        label {
+            display: block;
+            margin-top: .75rem;
+        }
+
+        input,
+        button,
+        select {
+            margin-top: .25rem;
+            padding: .5rem;
+            font-size: 1rem;
+        }
+
+        #result {
+            margin-top: 1rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Calculadora de Saída</h1>
+
+    <label for="start">Hora de entrada:</label>
+    <input id="start" type="time" />
+
+    <label for="mode">Regra:</label>
+    <select id="mode">
+        <option value="extra">Padrão — jornada de 8h48</option>
+        <option value="short">Short Friday — jornada de 6h</option>
+    </select>
+
+    <label for="lunch">Duração do almoço (minutos):</label>
+    <input id="lunch" type="number" min="0" value="60" />
+
+    <button id="calc">Calcular saída</button>
+
+    <div id="result"></div>
+
+    <script>
+        const WORK_MINUTES = 8 * 60 + 48; // 8h48 = 528 minutos
+        const SHORT_MINUTES = 6 * 60; // 6h = 360 minutos
+
+        function parseTimeToMinutes(timeStr) {
+            if (!timeStr) return null;
+            const [hh, mm] = timeStr.split(':').map(Number);
+            return hh * 60 + mm;
+        }
+        function minutesToTime(mins) {
+            mins = ((mins % (24 * 60)) + 24 * 60) % (24 * 60);
+            const hh = Math.floor(mins / 60);
+            const mm = mins % 60;
+            return String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+        }
+
+        document.getElementById('calc').addEventListener('click', () => {
+            const startStr = document.getElementById('start').value;
+            const mode = document.getElementById('mode').value;
+            const lunch = parseInt(document.getElementById('lunch').value, 10) || 0;
+            const startMin = parseTimeToMinutes(startStr);
+            if (startMin === null) {
+                document.getElementById('result').textContent = 'Informe a hora de entrada.';
+                return;
+            }
+
+            let total; // total em minutos desde meia-noite
+            if (mode === 'extra') {
+                total = startMin + WORK_MINUTES + lunch;
+            } else if (mode === 'short') {
+                total = startMin + SHORT_MINUTES + lunch;
+            } else { // comportamento padrão (caso adicione outras opções futuramente)
+                total = startMin + WORK_MINUTES;
+            }
+
+            const out = minutesToTime(total);
+            const dayOffset = Math.floor(total / (24 * 60));
+            let dayNote = '';
+            if (dayOffset === 1) dayNote = ' (no dia seguinte)';
+            else if (dayOffset > 1) dayNote = ` (+${dayOffset} dias)`;
+
+
+            document.getElementById('result').textContent = `Hora de saída: ${out}${dayNote}`;
+        });
+    </script>
+</body>
+
+</html>
